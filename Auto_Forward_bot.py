@@ -1,47 +1,91 @@
 import logging
-from telethon import TelegramClient, events, Button
+import re
+from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 from decouple import config
 from telethon.tl.functions.users import GetFullUserRequest
 
 logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-destination_channels = [
-    config("dest1", cast=int),
-    config("dest2", cast=int),
-    config("dest3", cast=int),
-    config("dest4", cast=int),
-    # Add more channel IDs as needed
-]
+destination_channels_str = config("DESTNATION_CHANNELS")
+destination_channels = [int(channel_id.strip()) for channel_id in destination_channels_str.split(',')]
 
-print("Starting...")
+replacement_link = config("MY_LINK", default=None)
+replacement_username = config("MY_USERNAME", default=None)
+
+logger.info("Starting...")
+
 try:
-    apiid = config("APP_ID", cast=int)
-    apihash = config("HASH")
-    bottoken = config("TOKEN")
-    frm = config("source", cast=int)
-    datgbot = TelegramClient('bot', apiid, apihash).start(bot_token=bottoken)
-except:
-    print("Environment vars are missing! Kindly recheck.")
-    print("Bot is quitting...")
+    api_id = config("APP_ID", cast=int)
+    api_hash = config("HASH")
+    string_session = config("STRING_SESSION")
+    user_client = TelegramClient(StringSession(string_session), api_id, api_hash)
+    user_client.start()
+    bot_token = config("TOKEN")
+    source_channel = config("SOURCE_CHANNELS", cast=int)
+    admin_user_id = config("ADMIN_USER_ID", cast=int)
+    datgbot = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
+except Exception as e:
+    logger.error(f"Error initializing the bot: {str(e)}")
+    logger.error("Bot is quitting...")
     exit()
 
 @datgbot.on(events.NewMessage(pattern="/start"))
 async def start(event):
-    ok = await datgbot(GetFullUserRequest(event.sender_id))
-    await event.reply(f"**Hi ``!**\n\n**I am a channel auto-forward bot!! Read /help to know more!\n\nI can be used in only two channels at a time.**\n\n[Contact Owner](https://t.me/WolfOfficials)..", link_preview=False)
+    user_id = event.sender_id
+    if user_id == admin_user_id:
+        try:
+            ok = await datgbot(GetFullUserRequest(user_id))
+            await event.reply(f"**Hi!**\n\n**I am a channel auto-forward bot!! Read /help to know more!\n\nI can be used in only two channels at a time.**\n\n[Contact Owner](https://t.me/WolfOfficials)..", link_preview=False)
+        except Exception as e:
+            logger.error(f"Error processing /start command: {str(e)}")
+    else:
+        await event.reply("You are not authorized to use the bot.")
 
 @datgbot.on(events.NewMessage(pattern="/help"))
-async def helpp(event):
-    await event.reply("**Help**\n\n**❄About this bot:\n➡This bot will send all new posts from destination channel to the one or more channels. (without forwarded tag)!**\n\n**❄How to use me?\n🏮Add me to the channels.\n🏮Make me an admin in all the channels.\n🏮Now all new messages would be autoposted on the linked channels!!**\n\n**Liked the bot?** [Purchase Code](https://t.me/WolfOfficials)", link_preview=False)
+async def help(event):
+    user_id = event.sender_id
+    if user_id == admin_user_id:
+        try:
+            await event.reply("**Help**\n\n**❄About this bot:\n➡This bot will send all new posts from the destination channel to one or more channels (without the forwarded tag)!**\n\n**❄How to use me?\n🏮Add me to the channels.\n🏮Make me an admin in all the channels.\n🏮Now all new messages would be autoposted on the linked channels!!**\n\n**Liked the bot?** [Purchase Code](https://t.me/WolfOfficials)", link_preview=False)
+        except Exception as e:
+            logger.error(f"Error processing /help command: {str(e)}")
+    else:
+        await event.reply("You are not authorized to use the bot.")
 
-@datgbot.on(events.NewMessage(incoming=True, chats=frm))
+async def replace_links_in_message(message):
+    if replacement_link:
+        message = re.sub(r'https?://t\.me\S*|t\.me\S*', replacement_link, message)
+    if replacement_username:
+        message = re.sub(r'@[\w]+', replacement_username, message)
+    return message
+
+async def replace_links_in_caption(caption):
+    if replacement_link:
+        caption = re.sub(r'https?://t\.me\S*|t\.me\S*', replacement_link, caption)
+    if replacement_username:
+        caption = re.sub(r'@[\w]+', replacement_username, caption)
+    return caption
+
+@user_client.on(events.NewMessage(chats=source_channel))
 async def forward_message(event):
+    user_id = event.sender_id
     if not event.is_private:
-        for destination_channel_id in destination_channels:
-            try:
-                await event.client.send_message(destination_channel_id, event.message)
-            except Exception as e:
-                print(f"Failed to forward message to destination channel {destination_channel_id}: {str(e)}")
+        try:
+            if event.message.media:
+                if getattr(event.message, 'message', None):
+                    replaced_caption = await replace_links_in_caption(event.message.message)
+                    event.message.message = replaced_caption
+                for destination_channel_id in destination_channels:
+                    await event.client.send_message(destination_channel_id, event.message)
+            else:
+                replaced_message = await replace_links_in_message(event.message.text)
+                for destination_channel_id in destination_channels:
+                    await event.client.send_message(destination_channel_id, replaced_message)
+        except Exception as e:
+            logger.error(f"Failed to forward the message: {str(e)}")
 
-print("Bot has started.")
+
+logger.info("Bot has started.")
 datgbot.run_until_disconnected()
