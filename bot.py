@@ -37,7 +37,7 @@ async def start(event):
     if user_id == admin_user_id:
         try:
             ok = await datgbot(GetFullUserRequest(user_id))
-            await event.reply(f"**Hi!**\n\n**I am a channel auto-forward bot!! Read /help to know more!\n\nI can be used in only two channels at a time.**\n\n[Contact Owner](https://t.me/WolfOfficials)..", link_preview=False)
+            await event.reply(f"**Hi!**\n\n**I am a channel auto-forward bot!! Read /help to know more!\n\n[Contact Owner](https://t.me/WolfOfficials)..", link_preview=False)
         except Exception as e:
             logger.error(f"Error processing /start command: {str(e)}")
     else:
@@ -48,7 +48,7 @@ async def help(event):
     user_id = event.sender_id
     if user_id == admin_user_id:
         try:
-            await event.reply("**Help**\n\n**❄About this bot:\n➡This bot will send all new posts from the destination channel to one or more channels (without the forwarded tag)!**\n\n**❄How to use me?\n🏮Add me to the channels.\n🏮Make me an admin in all the channels.\n🏮Now all new messages would be autoposted on the linked channels!!**\n\n**Liked the bot?** [Purchase Code](https://t.me/WolfOfficials)", link_preview=False)
+            await event.reply("**Help**\n\n**❄About this bot:\n➡This bot will send all new posts from the source channel to one or more channels (without the forwarded tag)!**\n\n**❄How to use me?\n🏮Add the account to the channels.\n🏮Make me an admin in destination channels.\n🏮Now all new messages would be autoposted on the linked channels!!**\n\n**Liked the bot?** [Get Code](https://t.me/WolfOfficials)", link_preview=False)
         except Exception as e:
             logger.error(f"Error processing /help command: {str(e)}")
     else:
