@@ -1,5 +1,5 @@
 # LiveBroadcastBot
-This bot get new posts from an Channel and forward them to multiple channels on telegram 
+**This bot get new posts from an Channel and forward them to multiple channels on telegram.**
 
 NOTE: Before running the Bot Join source and destination channels and make Your account admin in destination channels, ```Get API_ID```, ```HASH, Telthon```, ```STRING SESSION``` and ```CHANNEL IDs``` of all the channels
 
