@@ -16,7 +16,7 @@ NOTE: Before running the Bot Join source and destination channels and make Your 
 4. Edit the envoirements file using
 ```nano .env```
 
-5. Fill your out your credetionals and save the file using CTRL+S CTRL+X
+5. Fill your out your credetionals and save the file using ```CTRL+S``` ```CTRL+X```
 
 6. Now run the bot using
 ```python3 bot.py```
