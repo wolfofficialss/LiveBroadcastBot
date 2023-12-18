@@ -12,6 +12,7 @@ destination_channels_str = config("DESTNATION_CHANNELS")
 destination_channels = [int(channel_id.strip()) for channel_id in destination_channels_str.split(',')]
 
 replacement_link = config("MY_LINK", default=None)
+replacement_web_link = config("WEB_LINK", default=None)
 replacement_username = config("MY_USERNAME", default=None)
 
 logger.info("Starting...")
@@ -55,6 +56,8 @@ async def help(event):
         await event.reply("You are not authorized to use the bot.")
 
 async def replace_links_in_message(message):
+    if replacement_web_link:
+        message = re.sub(r'https?://lucknow\.game/#/register/\?InviteCode=5460|lucknow\.game/#/register/\?InviteCode=5460', replacement_web_link, message)
     if replacement_link:
         message = re.sub(r'https?://t\.me\S*|t\.me\S*', replacement_link, message)
     if replacement_username:
@@ -62,11 +65,14 @@ async def replace_links_in_message(message):
     return message
 
 async def replace_links_in_caption(caption):
+    if replacement_web_link:
+        caption = re.sub(r'https?://lucknow\.game/#/register/\?InviteCode=5460|lucknow\.game/#/register/\?InviteCode=5460', replacement_web_link, caption)
     if replacement_link:
         caption = re.sub(r'https?://t\.me\S*|t\.me\S*', replacement_link, caption)
     if replacement_username:
         caption = re.sub(r'@[\w]+', replacement_username, caption)
     return caption
+
 
 @user_client.on(events.NewMessage(chats=source_channel))
 async def forward_message(event):
@@ -74,9 +80,9 @@ async def forward_message(event):
     if not event.is_private:
         try:
             if event.message.media:
-                if getattr(event.message, 'message', None):
-                    replaced_caption = await replace_links_in_caption(event.message.message)
-                    event.message.message = replaced_caption
+                if getattr(event.message, 'text', None):
+                    replaced_message = await replace_links_in_message(event.message.text)
+                    event.message.text = replaced_message
                 for destination_channel_id in destination_channels:
                     await event.client.send_message(destination_channel_id, event.message)
             else:
