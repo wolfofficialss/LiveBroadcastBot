@@ -57,7 +57,7 @@ async def help(event):
 
 async def replace_links_in_message(message):
     if replacement_web_link:
-        message = re.sub(r'https?://lucknow\.game/#/register/\?InviteCode=5460|lucknow\.game/#/register/\?InviteCode=5460', replacement_web_link, message)
+        message = re.sub(r'https?://lucknow\.game/#/register/\?InviteCode=552|lucknow\.game/#/register/\?InviteCode=552', replacement_web_link, message)
     if replacement_link:
         message = re.sub(r'https?://t\.me\S*|t\.me\S*', replacement_link, message)
     if replacement_username:
@@ -66,7 +66,7 @@ async def replace_links_in_message(message):
 
 async def replace_links_in_caption(caption):
     if replacement_web_link:
-        caption = re.sub(r'https?://lucknow\.game/#/register/\?InviteCode=5460|lucknow\.game/#/register/\?InviteCode=5460', replacement_web_link, caption)
+        caption = re.sub(r'https?://lucknow\.game/#/register/\?InviteCode=552|lucknow\.game/#/register/\?InviteCode=552', replacement_web_link, caption)
     if replacement_link:
         caption = re.sub(r'https?://t\.me\S*|t\.me\S*', replacement_link, caption)
     if replacement_username:
